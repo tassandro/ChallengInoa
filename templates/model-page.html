@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    {% include 'model-header.html' %}
+</head>
+<body>
+    {%  block content %}
+
+        <h1>Olá, {{ user.username }}!</h1>
+
+    {% endblock %}
+    {% include 'model-footer.html' %}
+</body>
+</html>
