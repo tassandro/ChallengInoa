@@ -1,0 +1,39 @@
+{% extends 'model-page.html' %}
+{% block content %}
+<div>
+    <form method="post" action="submit">
+        {% csrf_token %}
+        <input type="email" name="email" placeholder="Digite seu email" required>
+        <button type="submit">Enviar Email</button>
+    </form>
+</div>
+<div>
+    <h2>Ativos monitorados</h2>
+    <ul>
+        {% for ativo in ativos %}
+        <li>{{ ativo }} (<a href="/home/ativo/?id={{ ativo.id }}">Editar</a>/<a href="/home/ativo/delete/{{ ativo.id }}">Excluir</a>)</li>
+        {% empty %}
+        <li>Nenhum ativo em monitoramento no momento.</li>
+        {% endfor %}
+    </ul>
+    <a href="/home/ativo"><button>Criar cotação de ativos</button></a>
+</div>
+<div>
+    <h2>Visualizar histórico de cotações</h2>
+    <select>
+        <option>Selecione uma cotação</option>
+        {% for ativo in ativos %}
+        <option>{{ ativo.ticker }}</option>
+        {% empty %}
+        <option>Nenhuma cotação disponível</option>
+        {% endfor %}
+    </select>
+    <ul>
+        {% for cotacao in cotacoes %}
+        <li>{{ cotacao }}</li>
+        {% empty %}
+        <li>Histórico vazio</li>
+        {% endfor %}
+    </ul>
+</div>
+        {% endblock %}
