@@ -3,11 +3,10 @@
 <head>
     {% include 'model-header.html' %}
 </head>
+
 <body>
+    <h1>Olá, {{ user.username }}!</h1>
     {%  block content %}
-
-        <h1>Olá, {{ user.username }}!</h1>
-
     {% endblock %}
     {% include 'model-footer.html' %}
 </body>
