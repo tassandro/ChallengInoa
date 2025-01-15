@@ -1,33 +1,16 @@
 import requests
+from decouple import config
+
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
-from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
 from core.forms import LoginForm, CreateAtivo
 from core.models import Ativo, Cotacao
 from core.scheduler import criar_monitoramento_ativo,excluir_monitoramento_ativo
+from core.stocks import obter_ativos_disponiveis, consultar_api
 
 API_URL = 'https://brapi.dev/api/quote/'
-API_KEY = '6s4xhTzigCC6bbdpf6Pk3Z'
-
-def get_api(ticker):
-    url = f'{API_URL}{ticker}?token={API_KEY}'
-    r = requests.get(url)
-    data = r.json()
-
-    response = {}
-
-    if data.get('error'):
-        response['error'] = data.get('error')
-        response['message'] = data.get('message')
-    else:
-        result = data.get('results', [])
-        if result:
-            response['longName'] = result[0].get('longName', 'No name available')
-            response['regularMarketPrice'] = result[0].get('regularMarketPrice', 'No price available')
-
-    return response
+API_KEY = config('API_KEY')
 
 def home(request):
     user = request.user
@@ -85,25 +68,23 @@ def submit_ativo(request):
         lim_sup = request.POST.get('limite_superior')
         lim_inf = request.POST.get('limite_inferior')
         periodo = request.POST.get('periodicidade')
+        # Caso o ativo já esteja criado no banco
         if Ativo.objects.filter(ticker__exact=ticker).exists():
             Ativo.objects.filter(ticker__exact=ticker).update(limite_superior=lim_sup,
                                                                limite_inferior=lim_inf,
                                                                periodicidade=periodo)
-            criar_monitoramento_ativo(ticker)
+        # Caso o ativo ainda não foi criado no banco
         else:
-            response = get_api(ticker)
-
-            if response.get('error'):
-                messages.error(request, response['message']) # Não está funcionando
-            else:
-                # print(response)
+            # Verifica se o ativo está disponivel
+            if ticker in obter_ativos_disponiveis():
                 Ativo.objects.create(ticker=ticker,
-                                     nome=response.get('longName'),
                                      limite_superior=lim_sup,
                                      limite_inferior=lim_inf,
                                      periodicidade=periodo)
-                criar_monitoramento_ativo(ticker)
-                # messages.success(request, "Ativo criado com sucesso!")
+            else:
+                return redirect('/')
+        criar_monitoramento_ativo(ticker)
+
     return redirect('/')
 
 def deletar_ativo(request, id):

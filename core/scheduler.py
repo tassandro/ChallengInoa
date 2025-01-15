@@ -1,25 +1,26 @@
-from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
+from decouple import config
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from django.core.mail import send_mail
 from core.models import Ativo, Cotacao
 
 import requests
 
-# Scheduler responsável por executar jobs
-# É configurado com opções default
+# Configuração do scheduler para execução de jobs em segundo plano
 scheduler = BackgroundScheduler()
 scheduler.start()
 
 API_URL = 'https://brapi.dev/api/quote/'
-API_KEY = '6s4xhTzigCC6bbdpf6Pk3Z'
-
-# https://brapi.dev/api/available
+API_KEY = config('API_KEY')
 
 def obter_cotacao(ticker):
     url = f'{API_URL}{ticker}?token={API_KEY}'
-    r = requests.get(url)
-    data = r.json()
+    response = requests.get(url)
+    data = response.json()
 
     preco_atual = None
+    ativo = Ativo.objects.get(ticker=ticker)
 
     if data.get('error'):
         print(f'Não foi possível obter a cotação do ativo - {ticker}.')
@@ -27,22 +28,41 @@ def obter_cotacao(ticker):
         result = data.get('results', [])
         if result:
             preco_atual = result[0].get('regularMarketPrice', 'No price available')
-
-    ativo = Ativo.objects.get(ticker=ticker)
+            if ativo.nome is None:
+                ativo.nome = result[0].get('longName', 'No name available')
+                ativo.save()
 
     Cotacao.objects.create(ativo=ativo, preco=preco_atual)
     print("Cotação criada com sucesso!")
 
+    data_hora = datetime.now().strftime('%H:%M:%S do dia %d/%m/%Y')
+
     if preco_atual <= ativo.limite_inferior:
-        print("Compre")
+        send_mail(
+            subject=f'Alerta de compra do ativo {ticker}!',  # Assunto
+            message=f'A cotação do ativo {ticker} atingiu o valor de R${preco_atual}, às {data_hora}',  # Mensagem
+            from_email=config('EMAIL_HOST_USER'),  # Remetente (from)
+            recipient_list=[config('EMAIL_HOST_USER')],  # Lista de destinatários
+            fail_silently=False  # Lança erro se houver falha
+        )
+        print(f"E-mail de compra enviado - Valor da cotação do ativo {ticker}:R${preco_atual}")
     if preco_atual >= ativo.limite_superior:
-        print('Venda')
+        send_mail(
+            subject=f'Alerta de venda do ativo {ticker}!',  # Assunto
+            message=f'A cotação do ativo {ticker} atingiu o valor de R${preco_atual}, às {data_hora}',  # Mensagem
+            from_email=config('EMAIL_HOST_USER'),  # Remetente (from)
+            recipient_list=[config('EMAIL_HOST_USER')],  # Lista de destinatários
+            fail_silently=False  # Lança erro se houver falha
+        )
+        print(f"E-mail de venda enviado - Valor da cotação do ativo {ticker}:R${preco_atual}")
 
 
 def criar_monitoramento_ativo(ticker):
     ativo = Ativo.objects.get(ticker=ticker)
 
     intervalo = ativo.periodicidade
+
+    obter_cotacao(ticker)
 
     if scheduler.get_job(ticker):
         print(f"Monitoramento do ativo {ticker} já existe. Verificando se é necessário alterar o intervalo.")
