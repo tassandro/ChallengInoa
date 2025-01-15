@@ -2,13 +2,25 @@ from datetime import datetime
 from decouple import config
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+
 from django.core.mail import send_mail
 from core.models import Ativo, Cotacao
 
 import requests
+import os
 
-# Configuração do scheduler para execução de jobs em segundo plano
-scheduler = BackgroundScheduler()
+# Caminho do banco de dados SQLite usado no Django
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sqlite_path = os.path.join(BASE_DIR, 'db.sqlite3')
+
+# Configuração do JobStore com SQLite
+jobstores = {
+    'default': SQLAlchemyJobStore(url=f'sqlite:///{sqlite_path}')  # Conectar o APScheduler ao banco do Django
+}
+
+# Criação do scheduler com configuração do JobStore
+scheduler = BackgroundScheduler(jobstores=jobstores)
 scheduler.start()
 
 API_URL = 'https://brapi.dev/api/quote/'

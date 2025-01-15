@@ -18,27 +18,6 @@ def home(request):
     cotacoes = Cotacao.objects.all()
     return render(request, 'home.html', {"ativos": ativos, "cotacoes": cotacoes})
 
-
-
-# def visualizar_historico(request):
-#     # Recuperar todos os ativos para exibição no dropdown
-#     ativos = Ativo.objects.all()
-#     cotacoes = []
-#     selected_ativo = None
-#
-#     # Se o formulário foi enviado via POST
-#     if request.method == 'POST':
-#         selected_ativo = request.POST.get('selected_ativo')  # Recupera o ID do ativo selecionado
-#         if selected_ativo:  # Se um ativo válido foi selecionado
-#             cotacoes = Cotacao.objects.filter(ativo=selected_ativo)  # Filtra cotações pelo ativo selecionado
-#
-#     # Renderiza o template com os dados necessários
-#     return render(request, 'home.html', {
-#         'ativos': ativos,
-#         'cotacoes': cotacoes,
-#         'selected_ativo': selected_ativo,
-#     })
-
 def ativo(request):
     id_ativo = request.GET.get('id')
     dado = {}
