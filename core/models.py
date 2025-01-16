@@ -1,5 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import User
+
+class Ticker(models.Model):
+    codigo = models.CharField(max_length=10, unique=True)
+
+    def __str__(self):
+        return self.codigo
 
 class Ativo(models.Model):
     ticker = models.CharField(max_length=10, unique=True)

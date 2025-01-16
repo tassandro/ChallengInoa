@@ -3,6 +3,7 @@ from decouple import config
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from django_apscheduler.jobstores import DjangoJobStore
 
 from django.core.mail import send_mail
 from core.models import Ativo, Cotacao
@@ -15,8 +16,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sqlite_path = os.path.join(BASE_DIR, 'db.sqlite3')
 
 # Configuração do JobStore com SQLite
+# jobstores = {
+#     'default': SQLAlchemyJobStore(url=f'sqlite:///{sqlite_path}')  # Conectar o APScheduler ao banco do Django
+# }
 jobstores = {
-    'default': SQLAlchemyJobStore(url=f'sqlite:///{sqlite_path}')  # Conectar o APScheduler ao banco do Django
+    'default': DjangoJobStore()  # Conectar o APScheduler ao banco do Django
 }
 
 # Criação do scheduler com configuração do JobStore
@@ -100,3 +104,6 @@ def excluir_monitoramento_ativo(ticker):
     if scheduler.get_job(ticker):
         scheduler.remove_job(ticker)
         print(f"{ticker} removido do monitoramento.")
+
+def shutdown_scheduler():
+    scheduler.shutdown(wait=False)

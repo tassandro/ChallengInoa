@@ -1,5 +1,8 @@
 import requests
 from decouple import config
+from django.http import JsonResponse
+
+from core.models import Ticker
 
 API_URL = 'https://brapi.dev/api/quote/'
 API_KEY = config('API_KEY')
@@ -23,16 +26,5 @@ def consultar_api(ticker):
     return response
 
 def obter_ativos_disponiveis():
-    url = "https://brapi.dev/api/available"
-
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Verifica se houve erros na requisição
-        data = response.json()
-
-        if "stocks" in data:
-            return data["stocks"]
-        else:
-            return "Dados de ativos não encontrados na resposta."
-    except requests.exceptions.RequestException as e:
-        return f"Erro ao acessar a API: {e}"
+    ativos = Ticker.objects.all()
+    return [ativo.codigo for ativo in ativos]
