@@ -15,6 +15,6 @@ urlpatterns = [
     path('home/ativo/?id=<int:id>', views.ativo),
     path('home/ativo/submit', views.submit_ativo),
     path('home/ativo/delete/<int:id>', views.deletar_ativo),
-    # path('home/historico', views.visualizar_historico)
+    path('obter_cotacoes/<int:id>', views.obter_cotacoes)
 
 ]

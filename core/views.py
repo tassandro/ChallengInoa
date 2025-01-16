@@ -1,19 +1,17 @@
-import requests
 from decouple import config
 
-from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
 
-from core.forms import LoginForm, CreateAtivo
+from core.forms import CreateAtivo
 from core.models import Ativo, Cotacao
 from core.scheduler import criar_monitoramento_ativo,excluir_monitoramento_ativo
-from core.stocks import obter_ativos_disponiveis, consultar_api
+from core.stocks import obter_ativos_disponiveis
 
 API_URL = 'https://brapi.dev/api/quote/'
 API_KEY = config('API_KEY')
 
 def home(request):
-    user = request.user
     ativos = Ativo.objects.all()
     cotacoes = Cotacao.objects.all()
     return render(request, 'home.html', {"ativos": ativos, "cotacoes": cotacoes})
@@ -43,27 +41,34 @@ def ativo(request):
 
 def submit_ativo(request):
     if request.POST:
-        ticker = request.POST.get('ticker')
+        ticker = request.POST.get('ticker').upper()
         lim_sup = request.POST.get('limite_superior')
         lim_inf = request.POST.get('limite_inferior')
         periodo = request.POST.get('periodicidade')
         # Caso o ativo já esteja criado no banco
         if Ativo.objects.filter(ticker__exact=ticker).exists():
-            Ativo.objects.filter(ticker__exact=ticker).update(limite_superior=lim_sup,
-                                                               limite_inferior=lim_inf,
-                                                               periodicidade=periodo)
-        # Caso o ativo ainda não foi criado no banco
+            Ativo.objects.filter(ticker__exact=ticker).update(
+                limite_superior=lim_sup,
+                limite_inferior=lim_inf,
+                periodicidade=periodo
+            )
         else:
-            # Verifica se o ativo está disponivel
+            # Verifica se o ativo está disponível
             if ticker in obter_ativos_disponiveis():
-                Ativo.objects.create(ticker=ticker,
-                                     limite_superior=lim_sup,
-                                     limite_inferior=lim_inf,
-                                     periodicidade=periodo)
+                Ativo.objects.create(
+                    ticker=ticker,
+                    limite_superior=lim_sup,
+                    limite_inferior=lim_inf,
+                    periodicidade=periodo
+                )
             else:
-                return redirect('/')
-        criar_monitoramento_ativo(ticker)
+                return redirect("/")
 
+        # Criação de monitoramento do ativo
+        criar_monitoramento_ativo(ticker)
+        return redirect("/")
+
+    # Se nenhum POST for recebido, apenas redireciona
     return redirect('/')
 
 def deletar_ativo(request, id):
@@ -71,3 +76,9 @@ def deletar_ativo(request, id):
     excluir_monitoramento_ativo(ativo.ticker)
     ativo.delete()
     return redirect('/')
+
+
+def obter_cotacoes(request, id):
+    ativo = get_object_or_404(Ativo, id=id)
+    cotacoes = [str(cotacao) for cotacao in Cotacao.objects.filter(ativo__exact=ativo.id)]
+    return JsonResponse({'cotacoes': cotacoes})
