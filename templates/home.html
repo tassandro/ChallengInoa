@@ -1,39 +1,78 @@
 {% extends 'model-page.html' %}
 {% block content %}
-<div>
-    <form method="post" action="submit">
-        {% csrf_token %}
-        <input type="email" name="email" placeholder="Digite seu email" required>
-        <button type="submit">Enviar Email</button>
-    </form>
-</div>
-<div>
-    <h2>Ativos monitorados</h2>
-    <ul>
-        {% for ativo in ativos %}
-        <li>{{ ativo }} (<a href="/home/ativo/?id={{ ativo.id }}">Editar</a>/<a href="/home/ativo/delete/{{ ativo.id }}">Excluir</a>)</li>
-        {% empty %}
-        <li>Nenhum ativo em monitoramento no momento.</li>
-        {% endfor %}
-    </ul>
-    <a href="/home/ativo"><button>Criar cotação de ativos</button></a>
-</div>
-<div>
-    <h2>Visualizar histórico de cotações</h2>
-    <select>
-        <option>Selecione uma cotação</option>
-        {% for ativo in ativos %}
-        <option>{{ ativo.ticker }}</option>
-        {% empty %}
-        <option>Nenhuma cotação disponível</option>
-        {% endfor %}
-    </select>
-    <ul>
-        {% for cotacao in cotacoes %}
-        <li>{{ cotacao }}</li>
-        {% empty %}
-        <li>Histórico vazio</li>
-        {% endfor %}
-    </ul>
-</div>
-        {% endblock %}
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="text-center">Ativos monitorados</h2>
+                <ul class="list-group">
+                    {% for ativo in ativos %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ ativo }}
+                            <span>
+                        <a href="/home/ativo/?id={{ ativo.id }}" class="btn btn-sm btn-warning me-2">Editar</a>
+                        <a href="/home/ativo/delete/{{ ativo.id }}" class="btn btn-sm btn-danger">Excluir</a>
+                    </span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item">Nenhum ativo em monitoramento no momento.</li>
+                    {% endfor %}
+                </ul>
+                <a href="/home/ativo" class="btn btn-primary mt-3 w-100">Criar cotação de ativos</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <h2 class="text-center">Visualizar histórico de cotações</h2>
+                <form>
+                    <div class="mb-3">
+                        <label for="ativoSelect" class="form-label">Selecione uma cotação</label>
+                        <select id="ativoSelect" class="form-select">
+                            <option value="">Selecione uma cotação</option>
+                            {% for ativo in ativos %}
+                                <option value="{{ ativo.id }}">{{ ativo.ticker }}</option>
+                            {% empty %}
+                                <option value="">Nenhuma cotação disponível</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+
+                <ul id="cotacoesList" class="list-group">
+                    <li class="list-group-item">Histórico vazio</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('ativoSelect').addEventListener('change', function () {
+            const ativoId = this.value;
+
+            if (ativoId) {
+                fetch(`/obter_cotacoes/${ativoId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const cotacoesList = document.getElementById('cotacoesList');
+                        cotacoesList.innerHTML = '';
+
+                        if (data.cotacoes.length > 0) {
+                            data.cotacoes.forEach(cotacao => {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item';
+                                li.textContent = cotacao {{ ativo.ticker }};
+                                cotacoesList.appendChild(li);
+                            });
+                        } else {
+                            cotacoesList.innerHTML = '<li class="list-group-item">Histórico vazio</li>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar cotações:', error);
+                    });
+            } else {
+                document.getElementById('cotacoesList').innerHTML = '<li class="list-group-item">Histórico vazio</li>';
+            }
+        });
+    </script>
+{% endblock %}
