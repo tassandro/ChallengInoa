@@ -18,7 +18,7 @@ def home(request):
 
 def ativo(request):
     id_ativo = request.GET.get('id')
-    dado = {}
+    dados = {}
 
     if id_ativo:
         ativo = Ativo.objects.get(id=id_ativo)

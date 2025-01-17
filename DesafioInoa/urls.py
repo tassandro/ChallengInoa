@@ -6,9 +6,6 @@ from core import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('query/<str:ticker>', views.get_data),
-    # path('login/', views.login_user),
-    # path('login/submit', views.submit_login),
     path('', RedirectView.as_view(url='home/')),
     path('home/', views.home),
     path('home/ativo/', views.ativo),

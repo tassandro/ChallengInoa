@@ -2,6 +2,10 @@ import os
 
 from django.apps import AppConfig
 
+"""
+    A função ready() foi definida para executar uma função pós-migração do banco de dados por meio de signals.
+    Além disso, a função shutdown_scheduler() é programada para ser executada no final do programa. 
+"""
 
 class CoreConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'

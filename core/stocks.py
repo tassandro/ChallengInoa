@@ -1,6 +1,5 @@
 import requests
 from decouple import config
-from django.http import JsonResponse
 
 from core.models import Ticker
 

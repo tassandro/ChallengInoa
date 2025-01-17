@@ -3,6 +3,11 @@ from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 from core.models import Ticker
 
+"""
+    O signal abaixo foi criado para salvar os códigos dos ativos disponibilizados pela API.
+    Ia ser implementada uma busca por esses código no sistema, mas optou-se por não fazer isso.
+"""
+
 @receiver(post_migrate)
 def initialize_items(sender, **kwargs):
     url = "https://brapi.dev/api/available"

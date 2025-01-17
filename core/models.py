@@ -1,5 +1,16 @@
 from django.db import models
 
+"""
+    Foram definidos três modelos para o sistema.
+    
+    Ticker: responsável por resgistrar todos os códigos de ativos disponibilizados
+            pela API ao migrar o banco de dados
+    Ativo: responsável por registrar os ativos cadastrados pelo usuário no sistema,
+            salvando as configurações definidas na criação.
+    Cotacao: responsável por resgistrar o preço das cotações de cada ativo. 
+"""
+
+
 class Ticker(models.Model):
     codigo = models.CharField(max_length=10, unique=True)
 
