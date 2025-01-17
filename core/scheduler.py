@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decouple import config
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
 from django.core.mail import send_mail
 from core.models import Ativo, Cotacao
@@ -15,14 +15,31 @@ import requests
     Criação, alteração e exclusão de tarefas.
     
     A tarefas são salvas no banco de dados e persistem caso o servidor seja reiniciado.
+    
+    Problema conhecido: ao reiniciar o servidor, pode acontecer de uma tarefa de monitoramento
+    de um mesmo ativo ser executada mais um vez no mesmo tempo. Isso gera registro a mais no banco.
+    Não consegui resolver esse problema.
+    
 """
 
+import os
+# Caminho do banco de dados SQLite usado no Django
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sqlite_path = os.path.join(BASE_DIR, 'db.sqlite3')
+
+# Configuração do JobStore com SQLite
 jobstores = {
-    'default': DjangoJobStore()  # Conectar o APScheduler ao banco do Django
+    'default': SQLAlchemyJobStore(url=f'sqlite:///{sqlite_path}')  # Conectar o APScheduler ao banco do Django
+}
+
+job_defaults = {
+    'misfire_grace_time': 10,  # Limite de 10 segundos para *misfires*
+    'coalesce': True,  # Junta execuções múltiplas atrasadas em uma única execução
+    'max_instances': 1  # Evita múltiplas execuções simultâneas do mesmo *job*
 }
 
 # Criação do scheduler com configuração do JobStore
-scheduler = BackgroundScheduler(jobstores=jobstores)
+scheduler = BackgroundScheduler(jobstores=jobstores, job_defaults=job_defaults)
 scheduler.start()
 
 API_URL = 'https://brapi.dev/api/quote/'
@@ -78,8 +95,6 @@ def criar_monitoramento_ativo(ticker):
 
     intervalo = ativo.periodicidade
 
-    obter_cotacao(ticker)
-
     if scheduler.get_job(ticker): # Alteração do ativo já existente
         scheduler.reschedule_job(
             job_id=ticker,
@@ -94,6 +109,7 @@ def criar_monitoramento_ativo(ticker):
             args=[ticker],
             id=ticker,
             replace_existing=True,
+            start_date=datetime.now() + timedelta(seconds=5)  # Executar após 5s de reinício
         )
 
 def excluir_monitoramento_ativo(ticker):
