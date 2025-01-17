@@ -26,13 +26,13 @@ O projeto foi desenvolvido utilizando a versão **3.10** do Python.
 
 Para rodar o projeto, siga os seguintes passos:
 
-1. Clonar o repositório
+1. **Clonar o repositório**
 
 ```shell
 git clone https://github.com/AdaltonF/Desafio-Inoa.git
 ```
 
-2. Criar um ambiente virtual com as bibliotecas utilizadas
+2. **Criar um ambiente virtual com as bibliotecas utilizadas**
 
 ```shell
 python -m venv venv
@@ -41,13 +41,13 @@ Para ativar o ambiente virtual no Windows:
 ```shell
 venv\Scripts\activate
 ```
-3. Instalar bibliotecas do projeto
+3. **Instalar bibliotecas do projeto**
 
 ```shell
 pip install -r requirements.txt
 ```
 
-4. Configurar variáveis de ambiente
+4. **Configurar variáveis de ambiente**
 
 Crie um arquivo `.env` e defina as seguintes variáveis:
 ```
@@ -59,11 +59,11 @@ API_KEY=chave_da_api_BRAPI
 * Para o Gmail, é possível criar uma senha de aplicação. Informaçõe [aqui](https://support.google.com/mail/answer/185833?hl=pt-BR)
 * Obtenha um chave da API gratuitamente pode meio do site: https://brapi.dev/
 
-5. Execute as migrações do banco de dados
+5. **Execute as migrações do banco de dados**
 ```shell
 python manage.py migrate
 ```
-6. Inicie o servidor:
+6. **Inicie o servidor**
 ```shell
 python manage.py runserver
 ```
