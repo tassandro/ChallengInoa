@@ -27,19 +27,6 @@ O sistema implementa os seguintes requisitos funcionais:
 
 ---
 
-## Tecnologias utilizadas
-
-O projeto foi desenvolvido com as seguintes tecnologias:
-
-- **Linguagem:** Python 3.10
-- **Framework Web:** Django
-- **Banco de Dados:** SQLite
-- **Agendador de Tarefas:** APScheduler
-- **Envio de e-mails:** Django Email Backend
-- **API de cotações:** BRAPI
-
----
-
 Para rodar o projeto localmente, siga os passos abaixo:
 
 ## Clonar o repositório
@@ -136,8 +123,6 @@ python manage.py runserver
 
 ---
 
-# Conclusão
-O projeto foi um desafio interessante, envolvendo desde a integração com APIs externas até a implementação de um sistema de monitoramento financeiro automatizado. Apesar das dificuldades encontradas, a solução final atende aos requisitos propostos.
 
 
 
