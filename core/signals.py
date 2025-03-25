@@ -1,31 +1,35 @@
 import requests
+import logging
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 from core.models import Ticker
 
-"""
-    O signal abaixo foi criado para salvar os códigos dos ativos disponibilizados pela API.
-    Ia ser implementada uma busca por esses código no sistema, mas optou-se por não fazer isso.
-"""
+
+logger = logging.getLogger(__name__)
 
 @receiver(post_migrate)
 def initialize_items(sender, **kwargs):
+    """Busca e salva os códigos de ativos disponíveis na API no modelo Ticker."""
     url = "https://brapi.dev/api/available"
 
     try:
-        response = requests.get(url)
-        response.raise_for_status()  # Verifica se houve erros na requisição
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
         data = response.json()
 
-        if "stocks" in data:
-            stocks = data["stocks"]
+        stocks = data.get("stocks", [])
+        if not isinstance(stocks, list):
+            logger.warning("Formato inesperado dos dados da API. Nenhum ativo salvo.")
+            return
 
-            # Salvar os dados no modelo Ticker
-            for stock in stocks:
-                Ticker.objects.get_or_create(codigo=stock)
+        codigos_existentes = set(Ticker.objects.values_list("codigo", flat=True))
+        novos_tickers = [Ticker(codigo=stock) for stock in stocks if stock not in codigos_existentes]
 
-            return f"{len(stocks)} registros de ações foram salvos/atualizados no banco de dados."
+        if novos_tickers:
+            Ticker.objects.bulk_create(novos_tickers)
+            logger.info(f"{len(novos_tickers)} novos registros de ações foram salvos no banco de dados.")
         else:
-            return "Dados de ativos não encontrados na resposta."
+            logger.info("Nenhum novo ativo foi adicionado ao banco de dados.")
+
     except requests.exceptions.RequestException as e:
-        return f"Erro ao acessar a API: {e}"
+        logger.error(f"Erro ao acessar a API: {e}")

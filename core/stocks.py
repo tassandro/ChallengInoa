@@ -1,29 +1,32 @@
 import requests
 from decouple import config
-
 from core.models import Ticker
 
 API_URL = 'https://brapi.dev/api/quote/'
 API_KEY = config('API_KEY')
 
 def consultar_api(ticker):
+    """Consulta a API e retorna informações sobre o ativo."""
     url = f'{API_URL}{ticker}?token={API_KEY}'
-    r = requests.get(url)
-    data = r.json()
+    
+    try:
+        response = requests.get(url)
+        data = response.json()
+    except requests.RequestException as e:
+        return {'error': 'Erro ao conectar com a API', 'message': str(e)}
 
-    response = {}
+    if 'error' in data:
+        return {'error': data.get('error'), 'message': data.get('message')}
 
-    if data.get('error'):
-        response['error'] = data.get('error')
-        response['message'] = data.get('message')
-    else:
-        result = data.get('results', [])
-        if result:
-            response['longName'] = result[0].get('longName', 'No name available')
-            response['regularMarketPrice'] = result[0].get('regularMarketPrice', 'No price available')
-
-    return response
+    result = data.get('results', [])
+    if result:
+        return {
+            'longName': result[0].get('longName', 'Nome não disponível'),
+            'regularMarketPrice': result[0].get('regularMarketPrice', 'Preço não disponível'),
+        }
+    
+    return {'error': 'Dados não encontrados'}
 
 def obter_ativos_disponiveis():
-    ativos = Ticker.objects.all()
-    return [ativo.codigo for ativo in ativos]
+    """Retorna uma lista dos tickers disponíveis no banco de dados."""
+    return list(Ticker.objects.values_list('codigo', flat=True))

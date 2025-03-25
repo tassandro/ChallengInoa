@@ -1,10 +1,11 @@
 import os
-
+import atexit
 from django.apps import AppConfig
 
 """
-    A função ready() foi definida para executar uma função pós-migração do banco de dados por meio de signals.
-    Além disso, a função shutdown_scheduler() é programada para ser executada no final do programa. 
+    A função ready() é utilizada para:
+    - Registrar automaticamente os signals do Django após as migrações.
+    - Agendar a execução da função shutdown_scheduler() ao final da execução do programa.
 """
 
 class CoreConfig(AppConfig):
@@ -12,9 +13,15 @@ class CoreConfig(AppConfig):
     name = 'core'
 
     def ready(self):
-        import core.signals  # Importa os signals automaticamente
-        if os.environ.get('RUN_MAIN', None) != 'true':
-            # Importa e executa o agendador
-            from core.scheduler import shutdown_scheduler
-            import atexit
-            atexit.register(shutdown_scheduler)
+        """Executado quando a aplicação Django é iniciada."""
+        from core import signals  # Importa os signals automaticamente
+
+        # Garante que o shutdown do agendador ocorra apenas uma vez
+        if os.environ.get('RUN_MAIN') != 'true':
+            try:
+                from core.scheduler import shutdown_scheduler
+                atexit.register(shutdown_scheduler)
+            except ImportError as e:
+                # Log para facilitar a depuração
+                import logging
+                logging.error(f"Erro ao importar shutdown_scheduler: {e}")

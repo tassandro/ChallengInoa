@@ -1,46 +1,57 @@
 {% extends 'model-page.html' %}
+
 {% block content %}
     <div class="container my-5">
-        <div class="row mb-4">
-            <div class="col">
-                <h3 class="text-center">Ativos monitorados</h3>
-                <ul class="list-group">
-                    {% for ativo in ativos %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ ativo }}
-                            <span>
-                        <a href="/home/ativo/?id={{ ativo.id }}" class="btn btn-sm btn-warning me-2">Editar</a>
-                        <a href="/home/ativo/delete/{{ ativo.id }}" class="btn btn-sm btn-danger">Excluir</a>
-                    </span>
-                        </li>
-                    {% empty %}
-                        <li class="list-group-item">Nenhum ativo em monitoramento no momento.</li>
-                    {% endfor %}
-                </ul>
-                <a href="/home/ativo" class="btn btn-primary mt-3 w-100">Criar cotação de ativos</a>
-            </div>
-        </div>
-
         <div class="row">
-            <div class="col">
-                <h3 class="text-center">Visualizar histórico de cotações</h3>
-                <form>
-                    <div class="mb-3">
-                        <label for="ativoSelect" class="form-label">Selecione uma cotação</label>
-                        <select id="ativoSelect" class="form-select">
-                            <option value="">Selecione uma cotação</option>
-                            {% for ativo in ativos %}
-                                <option value="{{ ativo.id }}">{{ ativo.ticker }}</option>
-                            {% empty %}
-                                <option value="">Nenhuma cotação disponível</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </form>
+            <div class="col-md-6">
+                <div class="card shadow-lg p-4">
+                    <h3 class="text-center text-primary">Ativos Monitorados</h3>
+                    <ul class="list-group mt-3">
+                        {% for ativo in ativos %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <strong>{{ ativo.ticker }} - {{ ativo.nome }}</strong>
+                                <span>
+                                    <a href="/home/ativo/?id={{ ativo.id }}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <a href="/home/ativo/delete/{{ ativo.id }}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </a>
+                                </span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">Nenhum ativo monitorado no momento.</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="/home/ativo" class="btn btn-primary mt-3 w-100">
+                        <i class="fas fa-plus"></i> Criar Cotação de Ativos
+                    </a>
+                </div>
+            </div>
 
-                <ul id="cotacoesList" class="list-group">
-                    <li class="list-group-item">Histórico vazio</li>
-                </ul>
+            <div class="col-md-6">
+                <div class="card shadow-lg p-4">
+                    <h3 class="text-center text-success">Histórico de Cotações</h3>
+                    <form class="mt-3">
+                        <div class="mb-3">
+                            <label for="ativoSelect" class="form-label">Selecione um ativo</label>
+                            <select id="ativoSelect" class="form-select">
+                                <option value="">Escolha um ativo</option>
+                                {% for ativo in ativos %}
+                                    <option value="{{ ativo.id }}">{{ ativo.ticker }}</option>
+                                {% empty %}
+                                    <option value="">Nenhum ativo disponível</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+
+                    <div class="cotacoes-container">
+                        <ul id="cotacoesList" class="list-group">
+                            <li class="list-group-item text-muted">Histórico vazio</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -60,19 +71,30 @@
                             data.cotacoes.forEach(cotacao => {
                                 const li = document.createElement('li');
                                 li.className = 'list-group-item';
-                                li.textContent = cotacao {{ ativo.ticker }};
+                                li.textContent = cotacao;
                                 cotacoesList.appendChild(li);
                             });
                         } else {
-                            cotacoesList.innerHTML = '<li class="list-group-item">Histórico vazio</li>';
+                            cotacoesList.innerHTML = '<li class="list-group-item text-muted">Histórico vazio</li>';
                         }
                     })
                     .catch(error => {
                         console.error('Erro ao buscar cotações:', error);
                     });
             } else {
-                document.getElementById('cotacoesList').innerHTML = '<li class="list-group-item">Histórico vazio</li>';
+                document.getElementById('cotacoesList').innerHTML = '<li class="list-group-item text-muted">Histórico vazio</li>';
             }
         });
     </script>
+
+    <style>
+        .cotacoes-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+    </style>
 {% endblock %}

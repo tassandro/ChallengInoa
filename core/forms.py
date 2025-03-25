@@ -5,3 +5,5 @@ class CreateAtivo(forms.ModelForm):
     class Meta:
         model = Ativo
         fields = ['ticker', 'limite_inferior', 'limite_superior', 'periodicidade']
+
+    
